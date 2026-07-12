@@ -47,6 +47,17 @@ public:
         storage.forEach<T>(func);
     }
 
+    template <typename Tag>
+    void addTag(Entity e) {
+        if (!isValid(e)) return;
+        storage.add<Tag>(entityIndex(e), Tag{});
+    }
+
+    template <typename Tag>
+    bool hasTag(Entity e) {
+        return storage.has<Tag>(entityIndex(e));
+    }
+
     template <typename A, typename B, typename Func>
     void view(Func func){
         storage.forEach<A>([&](uint32_t index, A& a){

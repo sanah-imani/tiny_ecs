@@ -10,4 +10,16 @@ struct Velocity {
 	float vy = 0.0f;
 };
 
+struct Health{
+	float hp = 100.0f;
+	float maxHp = 100.0f;
+};
+
+struct Damage{
+	float amount = 10.0f;
+};
+
+// Tags — zero-size marker types, no data
+struct Enemy {};
+struct Player {};
 
