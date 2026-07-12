@@ -15,15 +15,21 @@ public:
 
     template <typename T>
     T* get(Entity e) {
-        auto& arr = getArray<T>();
-        auto it = arr.data.find(e);
-        if (it == arr.data.end()) return nullptr;
-        return &it->second;
+        auto key = std::type_index(typeid(T));
+        auto it = arrays.find(key);
+        if (it == arrays.end()) return nullptr;
+        auto& arr = static_cast<ComponentArray<T>&>(*it->second);
+        auto dit = arr.data.find(e);
+        if (dit == arr.data.end()) return nullptr;
+        return &dit->second;
     }
 
     template <typename T>
     bool has(Entity e) {
-        auto& arr = getArray<T>();
+        auto key = std::type_index(typeid(T));
+        auto it = arrays.find(key);
+        if (it == arrays.end()) return false;
+        auto& arr = static_cast<ComponentArray<T>&>(*it->second);
         return arr.data.find(e) != arr.data.end();
     }
 

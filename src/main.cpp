@@ -1,15 +1,6 @@
 #include <iostream>
 #include "ecs/world.hpp"
-#include "ecs/components.hpp"
-
-void movementSystem(World& world) {
-    world.forEach<Position>([&](Entity e, Position& pos) {
-        if (auto* vel = world.get<Velocity>(e)) {
-            pos.x += vel->vx;
-            pos.y += vel->vy;
-        }
-    });
-}
+#include "ecs/systems.hpp"
 
 int main() {
     World world;

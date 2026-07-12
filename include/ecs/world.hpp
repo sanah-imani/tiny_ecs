@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+#include <queue>
 #include <vector>
 #include <functional>
 #include "entity.hpp"
@@ -10,7 +12,7 @@ class World {
 public:
     using System = std::function<void(World&)>;
 
-    World() = default;
+    World() { generations.push_back(0); }  // reserve slot 0 for INVALID_ENTITY
 
     Entity createEntity();
     void destroyEntity(Entity e);
@@ -22,22 +24,22 @@ public:
     template <typename T>
     void add(Entity e, T component) {
         if (!isValid(e)) return;
-        storage.add<T>(e, component);
+        storage.add<T>(entityIndex(e), component);
     }
 
     template <typename T>
     T* get(Entity e) {
-        return storage.get<T>(e);
+        return storage.get<T>(entityIndex(e));
     }
 
     template <typename T>
     bool has(Entity e) {
-        return storage.has<T>(e);
+        return storage.has<T>(entityIndex(e));
     }
 
     template <typename T>
     void remove(Entity e) {
-        storage.remove<T>(e);
+        storage.remove<T>(entityIndex(e));
     }
 
     template <typename T, typename Func>
@@ -45,8 +47,20 @@ public:
         storage.forEach<T>(func);
     }
 
+    template <typename A, typename B, typename Func>
+    void view(Func func){
+        storage.forEach<A>([&](uint32_t index, A& a){
+            if (auto* b = storage.get<B>(index)){
+                Entity e = makeEntity(index, generations[index]);
+                func(e, a, *b);
+            }
+        });
+    }
+
 private:
-    Entity nextEntity = 1;
+    uint32_t nextIndex = 1;
+    std::vector<uint8_t> generations;
+    std::queue<uint32_t> freeList;
     ComponentStorage storage;
     std::vector<System> systems;
 };
