@@ -3,6 +3,10 @@
 
 using Entity = uint32_t;
 
+// Distinct name for the index half of a handle. Still uint32_t, so the compiler
+// cannot yet catch passing one where the other is meant.
+using EntityIndex = uint32_t;
+
 constexpr Entity INVALID_ENTITY = 0;
 
 constexpr uint32_t ENTITY_INDEX_BITS = 24;

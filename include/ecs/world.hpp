@@ -1,12 +1,18 @@
 #pragma once
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
 #include <cstdint>
-#include <queue>
-#include <vector>
 #include <functional>
-#include "entity.hpp"
-#include "components.hpp"
+#include <queue>
+#include <tuple>
+#include <utility>
+#include <vector>
+
 #include "component_storage.hpp"
+#include "components.hpp"
+#include "entity.hpp"
 
 class World {
 public:
@@ -58,14 +64,13 @@ public:
         return storage.has<Tag>(entityIndex(e));
     }
 
-    template <typename A, typename B, typename Func>
-    void view(Func func){
-        storage.forEach<A>([&](uint32_t index, A& a){
-            if (auto* b = storage.get<B>(index)){
-                Entity e = makeEntity(index, generations[index]);
-                func(e, a, *b);
-            }
-        });
+    template <typename... Ts, typename Func>
+    void view(Func func) {
+        static_assert(sizeof...(Ts) > 0, "view requires at least one component type");
+        const std::array<size_t, sizeof...(Ts)> sizes{storage.size<Ts>()...};
+        const auto pivot = static_cast<size_t>(
+            std::min_element(sizes.begin(), sizes.end()) - sizes.begin());
+        dispatch<Ts...>(pivot, func, std::index_sequence_for<Ts...>{});
     }
 
 private:
@@ -74,4 +79,23 @@ private:
     std::queue<uint32_t> freeList;
     ComponentStorage storage;
     std::vector<System> systems;
+
+    Entity entityAt(EntityIndex index) const { return makeEntity(index, generations[index]); }
+
+    template <typename Pivot, typename... Ts, typename Func>
+    void driveBy(Func& func) {
+        storage.forEach<Pivot>([&](EntityIndex index, Pivot&) {
+            auto ptrs = std::make_tuple(storage.get<Ts>(index)...);
+            const bool complete = std::apply([](auto*... p) { return ((p != nullptr) && ...); }, ptrs);
+            if (complete)
+                std::apply([&](auto*... p) { func(entityAt(index), *p...); }, ptrs);
+        });
+    }
+
+    // pivot is a runtime choice, so fan out over every compile-time position and
+    // run only the branch that matches.
+    template <typename... Ts, typename Func, size_t... Is>
+    void dispatch(size_t pivot, Func& func, std::index_sequence<Is...>) {
+        ((Is == pivot ? driveBy<std::tuple_element_t<Is, std::tuple<Ts...>>, Ts...>(func) : void()), ...);
+    }
 };

@@ -116,6 +116,62 @@ TEST_CASE("view hands out references that write through to storage") {
     CHECK(world.get<Position>(e)->y == doctest::Approx(2.0f));
 }
 
+TEST_CASE("a single-component view visits every holder of that component") {
+    World world;
+    Entity a = world.createEntity();
+    Entity b = world.createEntity();
+    world.add<Position>(a, {0.0f, 0.0f});
+    world.add<Position>(b, {0.0f, 0.0f});
+    world.createEntity();
+
+    int visits = 0;
+    world.view<Position>([&](Entity, Position&) { ++visits; });
+    CHECK(visits == 2);
+}
+
+TEST_CASE("a three-component view requires all three") {
+    World world;
+
+    Entity all = world.createEntity();
+    world.add<Position>(all, {0.0f, 0.0f});
+    world.add<Velocity>(all, {0.0f, 0.0f});
+    world.add<Health>(all, {10.0f, 10.0f});
+
+    Entity two = world.createEntity();
+    world.add<Position>(two, {0.0f, 0.0f});
+    world.add<Velocity>(two, {0.0f, 0.0f});
+
+    std::vector<Entity> visited;
+    world.view<Position, Velocity, Health>(
+        [&](Entity e, Position&, Velocity&, Health&) { visited.push_back(e); });
+
+    REQUIRE(visited.size() == 1);
+    CHECK(visited[0] == all);
+}
+
+TEST_CASE("view result does not depend on which component pool is smallest") {
+    World world;
+    Entity tagged = INVALID_ENTITY;
+
+    for (int i = 0; i < 50; ++i) {
+        Entity e = world.createEntity();
+        world.add<Position>(e, {0.0f, 0.0f});
+        if (i == 25) {
+            world.addTag<Player>(e);
+            tagged = e;
+        }
+    }
+
+    std::vector<Entity> forward;
+    world.view<Position, Player>([&](Entity e, Position&, Player&) { forward.push_back(e); });
+
+    std::vector<Entity> reversed;
+    world.view<Player, Position>([&](Entity e, Player&, Position&) { reversed.push_back(e); });
+
+    CHECK(forward == std::vector<Entity>{tagged});
+    CHECK(reversed == std::vector<Entity>{tagged});
+}
+
 TEST_CASE("registered systems run in order on every update") {
     World world;
     std::vector<int> order;

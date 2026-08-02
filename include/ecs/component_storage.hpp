@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <memory>
 #include <typeindex>
 #include <unordered_map>
@@ -37,6 +38,12 @@ public:
     template <typename T>
     bool has(Entity e) const {
         return get<T>(e) != nullptr;
+    }
+
+    template <typename T>
+    size_t size() const {
+        const auto* arr = findArray<T>();
+        return arr ? arr->data.size() : 0;
     }
 
     template <typename T>
