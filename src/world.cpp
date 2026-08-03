@@ -42,4 +42,5 @@ void World::registerSystem(System system) {
 void World::update() {
     for (auto& system : systems)
         system(*this);
+    flushCommands();
 }

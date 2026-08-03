@@ -1,25 +1,24 @@
 #pragma once
 
 #include <iostream>
-#include <vector>
-#include "world.hpp"
+
 #include "components.hpp"
+#include "world.hpp"
 
 inline void movementSystem(World& world) {
-    world.view<Position, Velocity>([](Entity e, Position& pos, Velocity& vel) {
+    world.view<Position, Velocity>([](Entity, Position& pos, Velocity& vel) {
         pos.x += vel.vx;
         pos.y += vel.vy;
     });
 }
 
 inline void damageSystem(World& world) {
-    std::vector<Entity> dead;
+    CommandBuffer& cmd = world.commands();
     world.view<Health, Damage>([&](Entity e, Health& hp, Damage& dmg) {
         if (!world.hasTag<Enemy>(e)) return;
         hp.hp -= dmg.amount;
-        if (hp.hp <= 0.0f) dead.push_back(e);
+        if (hp.hp <= 0.0f) cmd.destroy(e);
     });
-    for (Entity e : dead) world.destroyEntity(e);
 }
 
 inline void healthPrintSystem(World& world) {

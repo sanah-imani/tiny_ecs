@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "command_buffer.hpp"
 #include "component_storage.hpp"
 #include "components.hpp"
 #include "entity.hpp"
@@ -27,10 +28,13 @@ public:
     void registerSystem(System system);
     void update();
 
+    CommandBuffer& commands() { return buffer; }
+    void flushCommands() { buffer.flush(*this); }
+
     template <typename T>
     void add(Entity e, T component) {
         if (!isValid(e)) return;
-        storage.add<T>(entityIndex(e), component);
+        storage.add<T>(entityIndex(e), std::move(component));
     }
 
     template <typename T>
@@ -45,6 +49,7 @@ public:
 
     template <typename T>
     void remove(Entity e) {
+        if (!isValid(e)) return;
         storage.remove<T>(entityIndex(e));
     }
 
@@ -79,6 +84,7 @@ private:
     std::queue<uint32_t> freeList;
     ComponentStorage storage;
     std::vector<System> systems;
+    CommandBuffer buffer;
 
     Entity entityAt(EntityIndex index) const { return makeEntity(index, generations[index]); }
 
@@ -99,3 +105,20 @@ private:
         ((Is == pivot ? driveBy<std::tuple_element_t<Is, std::tuple<Ts...>>, Ts...>(func) : void()), ...);
     }
 };
+
+// Declared in command_buffer.hpp; defined here because the bodies need a complete World.
+template <typename T>
+void CommandBuffer::add(Entity e, T component) {
+    commands.emplace_back(
+        [e, c = std::move(component)](World& w) mutable { w.add<T>(e, std::move(c)); });
+}
+
+template <typename Tag>
+void CommandBuffer::addTag(Entity e) {
+    commands.emplace_back([e](World& w) { w.addTag<Tag>(e); });
+}
+
+template <typename T>
+void CommandBuffer::remove(Entity e) {
+    commands.emplace_back([e](World& w) { w.remove<T>(e); });
+}

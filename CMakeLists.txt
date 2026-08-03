@@ -9,7 +9,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 
-add_library(ecs src/world.cpp)
+add_library(ecs src/world.cpp src/command_buffer.cpp)
 target_include_directories(ecs PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_compile_options(ecs PRIVATE -Wall -Wextra)
 
@@ -37,6 +37,7 @@ add_executable(ecs_tests
     tests/test_entity.cpp
     tests/test_world.cpp
     tests/test_storage.cpp
+    tests/test_commands.cpp
 )
 target_link_libraries(ecs_tests PRIVATE ecs doctest::doctest)
 target_compile_options(ecs_tests PRIVATE -Wall -Wextra)
