@@ -14,8 +14,10 @@
 #include "component_storage.hpp"
 #include "components.hpp"
 #include "entity.hpp"
+#include "event_bus.hpp"
 
 class World {
+    EventBus _bus;
 public:
     using System = std::function<void(World&)>;
 
@@ -30,6 +32,8 @@ public:
 
     CommandBuffer& commands() { return buffer; }
     void flushCommands() { buffer.flush(*this); }
+
+    EventBus& events() { return _bus;}
 
     template <typename T>
     void add(Entity e, T component) {

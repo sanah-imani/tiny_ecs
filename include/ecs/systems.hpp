@@ -17,7 +17,11 @@ inline void damageSystem(World& world) {
     world.view<Health, Damage>([&](Entity e, Health& hp, Damage& dmg) {
         if (!world.hasTag<Enemy>(e)) return;
         hp.hp -= dmg.amount;
-        if (hp.hp <= 0.0f) cmd.destroy(e);
+        world.events().emit(DamageTaken{e, dmg.amount});
+        if (hp.hp <= 0.0f) {
+            world.events().enqueue(EntityDied{e});
+            cmd.destroy(e);
+        }
     });
 }
 

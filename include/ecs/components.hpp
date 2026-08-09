@@ -1,5 +1,6 @@
 #pragma once 
 
+#include "ecs/entity.hpp"
 struct Position {
 	float x = 0.0f;
 	float y = 0.0f;
@@ -23,3 +24,6 @@ struct Damage{
 struct Enemy {};
 struct Player {};
 
+struct EntityDied {Entity entity;};
+struct DamageTaken {Entity entity; float damageAmount;};
+struct CollisionEvent {Entity a; Entity b;};
