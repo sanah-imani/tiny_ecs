@@ -7,6 +7,8 @@
 #include <functional>
 #include <queue>
 #include <tuple>
+#include <typeindex>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -91,6 +93,28 @@ public:
         dispatch<Ts...>(pivot, func, std::index_sequence_for<Ts...>{});
     }
 
+    template <typename T>
+    void markChanged(Entity e) {
+        if (!isValid(e)) return;
+        // register a clearer the first time we see this T
+        if (_changedTypes.insert(std::type_index(typeid(T))).second)
+            _clearers.push_back([this]() { clearChanged<T>(); });
+        addTag<Changed<T>>(e);
+    }
+
+    template <typename T>
+    void clearChanged() {
+        std::vector<EntityIndex> toRemove;
+        storage.forEach<Changed<T>>([&](EntityIndex idx, Changed<T>&) {
+            toRemove.push_back(idx);
+        });
+        for (auto idx : toRemove) storage.remove<Changed<T>>(idx);
+    }
+
+    void clearAllChanged() {
+        for (auto& clear : _clearers) clear();
+    }
+
 private:
     uint32_t nextIndex = 1;
     std::vector<uint8_t> generations;
@@ -100,6 +124,8 @@ private:
     CommandBuffer buffer;
     std::vector<std::function<void(Entity)>> _onCreated;
     std::vector<std::function<void(Entity)>> _onDestroyed;
+    std::unordered_set<std::type_index> _changedTypes;
+    std::vector<std::function<void()>>  _clearers;
 
     Entity entityAt(EntityIndex index) const { return makeEntity(index, generations[index]); }
 

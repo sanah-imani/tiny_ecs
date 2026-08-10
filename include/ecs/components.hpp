@@ -27,3 +27,6 @@ struct Player {};
 struct EntityDied {Entity entity;};
 struct DamageTaken {Entity entity; float damageAmount;};
 struct CollisionEvent {Entity a; Entity b;};
+
+template <typename T>
+struct Changed {};
