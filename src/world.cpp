@@ -16,12 +16,15 @@ Entity World::createEntity() {
 		gen = 0;
 	}
 
-	return makeEntity(index, gen);
+	Entity e = makeEntity(index, gen);
+	for (auto& cb : _onCreated) cb(e);
+	return e;
 }
 
 void World::destroyEntity(Entity e) {
     if (!isValid(e)) return;
 
+	for (auto& cb : _onDestroyed) cb(e);
 	uint32_t index = entityIndex(e);
 	generations[index]++;
 	storage.removeAll(index);

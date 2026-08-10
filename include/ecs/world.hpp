@@ -33,7 +33,16 @@ public:
     CommandBuffer& commands() { return buffer; }
     void flushCommands() { buffer.flush(*this); }
 
-    EventBus& events() { return _bus;}
+    EventBus& events() { return _bus; }
+
+    void onEntityCreated(std::function<void(Entity)> cb)   { _onCreated.push_back(std::move(cb)); }
+    void onEntityDestroyed(std::function<void(Entity)> cb) { _onDestroyed.push_back(std::move(cb)); }
+
+    template <typename T>
+    void onAdd(std::function<void(Entity, T&)> cb) { storage.onAdd<T>(std::move(cb)); }
+
+    template <typename T>
+    void onRemove(std::function<void(Entity)> cb) { storage.onRemove<T>(std::move(cb)); }
 
     template <typename T>
     void add(Entity e, T component) {
@@ -89,6 +98,8 @@ private:
     ComponentStorage storage;
     std::vector<System> systems;
     CommandBuffer buffer;
+    std::vector<std::function<void(Entity)>> _onCreated;
+    std::vector<std::function<void(Entity)>> _onDestroyed;
 
     Entity entityAt(EntityIndex index) const { return makeEntity(index, generations[index]); }
 
