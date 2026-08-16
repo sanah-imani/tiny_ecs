@@ -143,3 +143,40 @@ TEST_CASE("update flushes the frame's commands once, after every system") {
     CHECK_FALSE(world.isValid(e));
     CHECK(world.commands().empty());
 }
+
+TEST_CASE("cmd.create spawns an entity after flush") {
+    World world;
+    Entity spawned = INVALID_ENTITY;
+
+    world.commands().create([&](World& w, Entity e) {
+        spawned = e;
+        w.add<Position>(e, {1.0f, 2.0f});
+    });
+
+    CHECK(spawned == INVALID_ENTITY);  // not created yet
+
+    world.flushCommands();
+
+    REQUIRE(spawned != INVALID_ENTITY);
+    CHECK(world.isValid(spawned));
+    CHECK(world.get<Position>(spawned)->x == doctest::Approx(1.0f));
+    CHECK(world.get<Position>(spawned)->y == doctest::Approx(2.0f));
+}
+
+TEST_CASE("cmd.create inside a system is visible after update") {
+    World world;
+    int spawnCount = 0;
+
+    world.registerSystem([&](World& w) {
+        if (spawnCount++ > 0) return;  // only spawn on frame 0
+        w.commands().create([](World& w2, Entity e) {
+            w2.add<Health>(e, {50.0f, 50.0f});
+        });
+    });
+
+    world.update();  // create fires during flush at end of frame
+
+    int found = 0;
+    world.forEach<Health>([&](Entity, Health&) { ++found; });
+    CHECK(found == 1);
+}
