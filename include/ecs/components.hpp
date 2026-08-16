@@ -20,6 +20,10 @@ struct Damage{
 	float amount = 10.0f;
 };
 
+struct Lifetime {
+    int framesLeft = 10;
+};
+
 // Tags — zero-size marker types, no data
 struct Enemy {};
 struct Player {};

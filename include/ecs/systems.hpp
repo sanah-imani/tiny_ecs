@@ -1,8 +1,10 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
 
 #include "components.hpp"
+#include "ecs/entity.hpp"
 #include "world.hpp"
 
 inline void movementSystem(World& world) {
@@ -29,4 +31,13 @@ inline void healthPrintSystem(World& world) {
     world.forEach<Health>([](Entity e, Health& hp) {
         std::cout << "Entity " << e << " hp: " << hp.hp << "\n";
     });
+}
+
+inline void lifetimeSystem(World& world) {
+    std::vector<Entity> dead;
+    world.forEach<Lifetime>([&](Entity e, Lifetime& lt) {
+        lt.framesLeft--;
+        if (lt.framesLeft <= 0) dead.push_back(e);
+    });
+    for (Entity e : dead) world.destroyEntity(e);
 }
