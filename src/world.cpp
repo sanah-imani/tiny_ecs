@@ -46,5 +46,6 @@ void World::update() {
     for (auto& system : systems)
         system(*this);
     flushCommands();
+    _bus.flush();
     clearAllChanged();
 }
