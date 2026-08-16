@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "ecs/entity.hpp"
 #include "ecs/world.hpp"
 
 void CommandBuffer::destroy(Entity e) {
@@ -16,4 +17,11 @@ void CommandBuffer::flush(World& world) {
         batch.swap(commands);
         for (auto& command : batch) command(world);
     }
+}
+
+void CommandBuffer::create(std::function<void(World&, Entity)> setup){
+    record([s = std::move(setup)] (World& w){
+        Entity e = w.createEntity();
+        s(w, e);
+    });
 }

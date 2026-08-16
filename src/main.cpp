@@ -11,6 +11,15 @@ int main() {
     world.registerSystem(healthPrintSystem);
     world.registerSystem(damageSystem);
 
+    world.registerSystem([](World &w){
+        w.commands().create([](World& w2, Entity bullet){
+            w2.add<Position>(bullet, {5.0f, 0.0f});
+            w2.add<Velocity>(bullet, {3.0f, 0.0f});
+            w2.add<Lifetime>(bullet, {5});
+
+        });
+    });
+
     // Player — moves every frame
     Entity player = world.createEntity();
     world.add<Position>(player, {0, 0});

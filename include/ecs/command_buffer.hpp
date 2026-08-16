@@ -31,6 +31,8 @@ public:
 
     bool empty() const { return commands.empty(); }
 
+    void create(std::function<void(World&, Entity)> setup);
+
 private:
     std::vector<Command> commands;
 };
