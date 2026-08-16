@@ -11,6 +11,7 @@ endif()
 
 add_library(ecs src/world.cpp src/command_buffer.cpp)
 target_include_directories(ecs PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(ecs PUBLIC nlohmann_json::nlohmann_json)
 target_compile_options(ecs PRIVATE -Wall -Wextra)
 
 add_executable(tiny_ecs src/main.cpp)
@@ -25,6 +26,16 @@ FetchContent_Declare(doctest
     DOWNLOAD_NO_EXTRACT TRUE
 )
 FetchContent_MakeAvailable(doctest)
+
+FetchContent_Declare(nlohmann_json
+    URL https://raw.githubusercontent.com/nlohmann/json/v3.11.3/single_include/nlohmann/json.hpp
+    DOWNLOAD_NO_EXTRACT TRUE
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
+add_library(nlohmann_json INTERFACE)
+target_include_directories(nlohmann_json INTERFACE ${nlohmann_json_SOURCE_DIR})
+add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
 
 add_library(doctest INTERFACE)
 target_include_directories(doctest INTERFACE ${doctest_SOURCE_DIR})
