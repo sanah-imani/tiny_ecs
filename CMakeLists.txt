@@ -39,6 +39,7 @@ add_executable(ecs_tests
     tests/test_storage.cpp
     tests/test_commands.cpp
     tests/test_events.cpp
+    tests/test_collision.cpp
 )
 target_link_libraries(ecs_tests PRIVATE ecs doctest::doctest)
 target_compile_options(ecs_tests PRIVATE -Wall -Wextra)
