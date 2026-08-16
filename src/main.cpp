@@ -2,6 +2,7 @@
 #include "ecs/components.hpp"
 #include "ecs/world.hpp"
 #include "ecs/systems.hpp"
+#include "ecs/scene_serializer.hpp"
 
 int main() {
     World world;
@@ -54,5 +55,31 @@ int main() {
 
         std::cout << "\n";
     }
+
+    // -- serialization --
+
+    SceneSerializer serializer;
+    serializer.registerComponent<Position>("Position", 
+        [](const Position& p) -> json {return {{"x", p.x}, {"y", p.y}};}, 
+        [] (const json& j) -> Position {return {j["x"].get<float>(), j["y"].get<float>()};}
+    );
+    serializer.registerComponent<Velocity>("Velocity",
+        [](const Velocity& v) -> json { return {{"vx", v.vx}, {"vy", v.vy}}; },
+        [](const json& j) -> Velocity { return {j["vx"].get<float>(), j["vy"].get<float>()}; }
+    );
+    serializer.registerComponent<Health>("Health",
+        [](const Health& h) -> json { return {{"hp", h.hp}, {"maxHp", h.maxHp}}; },
+        [](const json& j) -> Health { return {j["hp"].get<float>(), j["maxHp"].get<float>()}; }
+    );
+    serializer.registerComponent<Player>("Player",
+        [](const Player&) -> json { return {}; },
+        [](const json&)   -> Player { return {}; }
+    );
+    serializer.save(world, "scene.json");
+    std::cout << "Saved scene.json\n";
+    World loaded;
+    serializer.load(loaded, "scene.json");
+    std::cout << "Loaded " << " world from scene.json\n"; 
+    
     return 0;
 }

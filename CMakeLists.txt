@@ -15,7 +15,7 @@ target_link_libraries(ecs PUBLIC nlohmann_json::nlohmann_json)
 target_compile_options(ecs PRIVATE -Wall -Wextra)
 
 add_executable(tiny_ecs src/main.cpp)
-target_link_libraries(tiny_ecs PRIVATE ecs)
+target_link_libraries(tiny_ecs PRIVATE ecs nlohmann_json::nlohmann_json)
 
 include(FetchContent)
 
@@ -34,6 +34,11 @@ FetchContent_Declare(nlohmann_json
 FetchContent_MakeAvailable(nlohmann_json)
 
 add_library(nlohmann_json INTERFACE)
+# The single-header download lands as json.hpp directly in SOURCE_DIR,
+# so we expose SOURCE_DIR as "nlohmann/" to match the canonical include path.
+file(MAKE_DIRECTORY ${nlohmann_json_SOURCE_DIR}/nlohmann)
+file(COPY ${nlohmann_json_SOURCE_DIR}/json.hpp
+     DESTINATION ${nlohmann_json_SOURCE_DIR}/nlohmann)
 target_include_directories(nlohmann_json INTERFACE ${nlohmann_json_SOURCE_DIR})
 add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
 
@@ -51,6 +56,7 @@ add_executable(ecs_tests
     tests/test_commands.cpp
     tests/test_events.cpp
     tests/test_collision.cpp
+    tests/test_serializer.cpp
 )
 target_link_libraries(ecs_tests PRIVATE ecs doctest::doctest)
 target_compile_options(ecs_tests PRIVATE -Wall -Wextra)
